@@ -3,7 +3,8 @@ OUTPUT_NAME = firmware
 CONFIG = rv32i
 ABI = ilp32
 LINKER = firmware.ld
-CROSS = riscv64-linux-gnu-
+# CROSS = riscv64-linux-gnu-
+CROSS = riscv64-unknown-elf-
 CROSSCFLAGS = -O3 -Wno-int-conversion -march=$(CONFIG) -mabi=$(ABI) -ffreestanding -nostdlib
 CROSSLDFLAGS = -march=$(CONFIG) -mabi=$(ABI) -ffreestanding -nostdlib  -Wl,-M
 UART_PORT = ttyUSB1

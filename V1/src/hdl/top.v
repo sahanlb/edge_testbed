@@ -10,29 +10,31 @@ module top
 	input [3:0] sw,
 	input uart_rx,
 	output uart_tx,  
-	output [3:0] led, output [3:0] led_r, output [3:0] led_g,  
-	output ddr3_reset_n, output [0:0] ddr3_cke, output [0:0] ddr3_ck_p, output [0:0]  ddr3_ck_n,
-	output [0:0] ddr3_cs_n, output ddr3_ras_n, output ddr3_cas_n, output ddr3_we_n,
-	output [2:0] ddr3_ba, output [13:0] ddr3_addr, output [0:0] ddr3_odt, output [1:0] ddr3_dm,
-	inout [1:0] ddr3_dqs_p, inout [1:0] ddr3_dqs_n, inout [15:0] ddr3_dq,
-	inout i2c_sda, output i2c_scl, output i2c_sda_pup, output i2c_scl_pup,
-	input spi_miso, output spi_mosi, output spi_clk, output spi_cs
+	output [7:0] led,
+	output [0:0] ddr2_cke, output [0:0] ddr2_ck_p, output [0:0]  ddr2_ck_n,
+	output [0:0] ddr2_cs_n, output ddr2_ras_n, output ddr2_cas_n, output ddr2_we_n,
+	output [2:0] ddr2_ba, output [12:0] ddr2_addr, output [0:0] ddr2_odt, output [1:0] ddr2_dm,
+	inout [1:0] ddr2_dqs_p, inout [1:0] ddr2_dqs_n, inout [15:0] ddr2_dq
 ); 
+
+	wire i2c_sda; wire i2c_scl;
+	wire spi_miso; wire spi_mosi; wire spi_clk; wire spi_cs;
+
 `else
 ;
 	reg rst; 
 	reg clk_i;
 	wire uart_rx;
 	wire uart_tx;
-	wire i2c_sda; wire i2c_scl; wire i2c_sda_pup; wire i2c_scl_pup;
-	wire ddr3_reset_n; wire [0:0] ddr3_cke; wire [0:0] ddr3_ck_p; wire [0:0]  ddr3_ck_n;
-	wire [0:0] ddr3_cs_n; wire ddr3_ras_n; wire ddr3_cas_n; wire ddr3_we_n;
-	wire [2:0] ddr3_ba; wire [13:0] ddr3_addr; wire [0:0] ddr3_odt; wire [1:0] ddr3_dm;
-	wire [1:0] ddr3_dqs_p; wire [1:0] ddr3_dqs_n; wire [15:0] ddr3_dq;
+	wire i2c_sda; wire i2c_scl;
+	wire ddr3_reset_n; wire [0:0] ddr2_cke; wire [0:0] ddr2_ck_p; wire [0:0]  ddr2_ck_n;
+	wire [0:0] ddr2_cs_n; wire ddr2_ras_n; wire ddr2_cas_n; wire ddr2_we_n;
+	wire [2:0] ddr2_ba; wire [13:0] ddr2_addr; wire [0:0] ddr2_odt; wire [1:0] ddr2_dm;
+	wire [1:0] ddr2_dqs_p; wire [1:0] ddr2_dqs_n; wire [15:0] ddr2_dq;
 	wire spi_miso; wire spi_mosi; wire spi_clk; wire spi_cs;
 	
 	reg [3:0] sw;
-	wire [3:0] led;
+	wire [7:0] led;
 	reg sim_utx_dv;
     	reg [7:0] sim_utx_data;
 	initial clk_i = 0;
@@ -68,21 +70,21 @@ module top
 
 	    ddr3 sdramddr3_0 (
 	    ddr3_reset_n,
-	    ddr3_ck_p,
-	    ddr3_ck_n,
-	    ddr3_cke,
-	    ddr3_cs_n,
-	    ddr3_ras_n,
-	    ddr3_cas_n,
-	    ddr3_we_n,
-	    ddr3_dm,
-	    ddr3_ba,
-	    ddr3_addr,
-	    ddr3_dq,
-	    ddr3_dqs_p,
-	    ddr3_dqs_n,
+	    ddr2_ck_p,
+	    ddr2_ck_n,
+	    ddr2_cke,
+	    ddr2_cs_n,
+	    ddr2_ras_n,
+	    ddr2_cas_n,
+	    ddr2_we_n,
+	    ddr2_dm,
+	    ddr2_ba,
+	    ddr2_addr,
+	    ddr2_dq,
+	    ddr2_dqs_p,
+	    ddr2_dqs_n,
 	    ,
-	    ddr3_odt
+	    ddr2_odt
 	);
 `endif
 
@@ -260,7 +262,7 @@ module top
 	// I2C Tristate Signals
 	wire 				i2c_sda_sel;
 	wire 				i2c_sda_out;
-	wire 				i2c_sda_in;
+	wire 				i2c_sda_in = 1'b0;
 	
 	// DRAM Controller
 	wire				ui_clk;
@@ -473,7 +475,7 @@ module top
 		.b_valid(gpio_b_valid),
 		.b_response(gpio_b_response),
 		.sw(sw),
-		.led({led_r,led})
+		.led(led)
 	);
 
 
@@ -563,21 +565,20 @@ module top
 
 
 	mig_7series_0 mig_inst(
-		.ddr3_dq(ddr3_dq),
-		.ddr3_dqs_n(ddr3_dqs_n),
-		.ddr3_dqs_p(ddr3_dqs_p),
-		.ddr3_addr(ddr3_addr),
-		.ddr3_ba(ddr3_ba),
-		.ddr3_ras_n(ddr3_ras_n),
-		.ddr3_cas_n(ddr3_cas_n),
-		.ddr3_we_n(ddr3_we_n),
-		.ddr3_reset_n(ddr3_reset_n),
-		.ddr3_ck_p(ddr3_ck_p),
-		.ddr3_ck_n(ddr3_ck_n),
-		.ddr3_cke(ddr3_cke),
-		.ddr3_cs_n(ddr3_cs_n),
-		.ddr3_dm(ddr3_dm),
-		.ddr3_odt(ddr3_odt),
+		.ddr2_dq(ddr2_dq),
+		.ddr2_dqs_n(ddr2_dqs_n),
+		.ddr2_dqs_p(ddr2_dqs_p),
+		.ddr2_addr(ddr2_addr),
+		.ddr2_ba(ddr2_ba),
+		.ddr2_ras_n(ddr2_ras_n),
+		.ddr2_cas_n(ddr2_cas_n),
+		.ddr2_we_n(ddr2_we_n),
+		.ddr2_ck_p(ddr2_ck_p),
+		.ddr2_ck_n(ddr2_ck_n),
+		.ddr2_cke(ddr2_cke),
+		.ddr2_cs_n(ddr2_cs_n),
+		.ddr2_dm(ddr2_dm),
+		.ddr2_odt(ddr2_odt),
 		.sys_clk_i(ddr_sys_clk),
 		.clk_ref_i(ddr_clk_ref_i),
 		.ui_clk(ui_clk),
@@ -632,9 +633,6 @@ module top
 	);
 	
 
-	assign i2c_sda_pup = 1'b1;
-	assign i2c_scl_pup = 1'b1;
-	IOBUF sd(.T(i2c_sda_sel),.IO(i2c_sda),.I(i2c_sda_out),.O(i2c_sda_in) );
 	camera_axi #(.I2C_ADDR(8'h60)) cam
   	(
 		.clk(ui_clk),
