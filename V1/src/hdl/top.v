@@ -22,7 +22,6 @@ module top
 
 `else
 ;
-	reg rst; 
 	reg clk_i;
 	wire uart_rx;
 	wire uart_tx;
@@ -40,19 +39,15 @@ module top
 	initial clk_i = 0;
 	always #5000 clk_i = ~clk_i;
 	initial begin
-		rst  = 1;
 		sw[0] = 1'b1;
 		sw[1] = 0;
 		sim_utx_dv = 0;
 		sim_utx_data = 8'd0;
 		#20000;
-		rst = 0;
 		sw[0] = 1'b0;
 		#130_000_000;
-		rst = 0;
 		sw[1] = 1'b1;
 		#200_000_000;
-		rst = 0;
 		sw[1] = 1'b0;
 		#20_000_000;
 		sim_utx_data = 8'd6;
