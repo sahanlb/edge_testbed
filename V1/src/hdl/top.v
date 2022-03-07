@@ -11,8 +11,6 @@ module top
 	input uart_rx,
 	output uart_tx,  
 	output [7:0] led,
-  output mig_calib_done,
-  output ddr_r_ready, ddr_w_ready,
 	output [0:0] ddr2_cke, output [0:0] ddr2_ck_p, output [0:0]  ddr2_ck_n,
 	output [0:0] ddr2_cs_n, output ddr2_ras_n, output ddr2_cas_n, output ddr2_we_n,
 	output [2:0] ddr2_ba, output [12:0] ddr2_addr, output [0:0] ddr2_odt, output [1:0] ddr2_dm,
@@ -64,25 +62,6 @@ module top
 	always @(negedge spi_clk)
 	   spi_mosi_reg = {spi_mosi_reg[7:0], spi_mosi_reg[8]}; 
 	assign spi_miso = spi_mosi_reg[8];
-
-	    ddr3 sdramddr3_0 (
-	    ddr3_reset_n,
-	    ddr2_ck_p,
-	    ddr2_ck_n,
-	    ddr2_cke,
-	    ddr2_cs_n,
-	    ddr2_ras_n,
-	    ddr2_cas_n,
-	    ddr2_we_n,
-	    ddr2_dm,
-	    ddr2_ba,
-	    ddr2_addr,
-	    ddr2_dq,
-	    ddr2_dqs_p,
-	    ddr2_dqs_n,
-	    ,
-	    ddr2_odt
-	);
 `endif
 
 	
@@ -342,8 +321,9 @@ module top
 		.busy(progloader_busy)
 	);
 
-
-	cachecontroller_axi #(.CACHE_ADDR_SIZE(CACHE_ADDR_SIZE),.MEM_ADDR_SIZE(MEM_ADDR_SIZE))  cachecontroller (
+/*****************************************************************************/
+// Replace caches and DRAM with a single BRAM
+	bram_axi #(.ADDR_WIDTH(25),.DATA_WIDTH(AXI_DATA_WIDTH))  mem (
 		.clk(ui_clk),
 		.rst(ui_rst),
 		.axi_araddr(cachecontroller_axi_araddr),
@@ -361,99 +341,11 @@ module top
 		.axi_wready(cachecontroller_axi_wready),
 		.b_ready((reprogram) ? progloader_b_ready : cachecontroller_b_ready),
 		.b_valid(cachecontroller_b_valid),
-		.b_response(cachecontroller_b_response),
-		.ddr_axi_araddr(ddr_axi_araddr),
-		.ddr_axi_arvalid(ddr_axi_arvalid),
-		.ddr_axi_arready(ddr_axi_arready),
-		.ddr_axi_awaddr(ddr_axi_awaddr),
-		.ddr_axi_awvalid(ddr_axi_awvalid),
-		.ddr_axi_awready(ddr_axi_awready),
-		.ddr_axi_rdata(ddr_axi_rdata),
-		.ddr_axi_rvalid(ddr_axi_rvalid),
-		.ddr_axi_rready(ddr_axi_rready),
-		.ddr_axi_wdata(ddr_axi_wdata),
-		.ddr_axi_wstrb(ddr_axi_wstrb),
-		.ddr_axi_wvalid(ddr_axi_wvalid),
-		.ddr_axi_wready(ddr_axi_wready),
-		.ddr_b_ready(ddr_axi_bready),
-		.ddr_b_valid(ddr_axi_bvalid),
-		.ddr_b_response(ddr_axi_bresp),
-		.L1_axi_araddr(L1_axi_araddr),
-		.L1_axi_arvalid(L1_axi_arvalid),
-		.L1_axi_arready(L1_axi_arready),
-		.L1_axi_awaddr(L1_axi_awaddr),
-		.L1_axi_awvalid(L1_axi_awvalid),
-		.L1_axi_awready(L1_axi_awready),
-		.L1_axi_rdata(L1_axi_rdata),
-		.L1_axi_rvalid(L1_axi_rvalid),
-		.L1_axi_rready(L1_axi_rready),
-		.L1_axi_wdata(L1_axi_wdata),
-		.L1_axi_wstrb(L1_axi_wstrb),
-		.L1_axi_wvalid(L1_axi_wvalid),
-		.L1_axi_wready(L1_axi_wready),
-		.L1_b_ready(L1_b_ready),
-		.L1_b_valid(L1_b_valid),
-		.L1_b_response(L1_b_response),		
-		.table_axi_araddr(table_axi_araddr),
-		.table_axi_arvalid(table_axi_arvalid),
-		.table_axi_arready(table_axi_arready),
-		.table_axi_awaddr(table_axi_awaddr),
-		.table_axi_awvalid(table_axi_awvalid),
-		.table_axi_awready(table_axi_awready),
-		.table_axi_rdata(table_axi_rdata),
-		.table_axi_rvalid(table_axi_rvalid),
-		.table_axi_rready(table_axi_rready),
-		.table_axi_wdata(table_axi_wdata),
-		.table_axi_wstrb(table_axi_wstrb),
-		.table_axi_wvalid(table_axi_wvalid),
-		.table_axi_wready(table_axi_wready),
-		.table_b_ready(table_b_ready),
-		.table_b_valid(table_b_valid),
-		.table_b_response(table_b_response),
-		.w_processing(cachecontroller_w_processing)
+		.b_response(cachecontroller_b_response)
 	);
-	
-	bram_axi #(.ADDR_WIDTH(CACHE_ADDR_SIZE),.DATA_WIDTH(MEM_ADDR_SIZE-CACHE_ADDR_SIZE-2))  cache_table (
-		.clk(ui_clk),
-		.rst(ui_rst),
-		.axi_araddr(table_axi_araddr),
-		.axi_arvalid(table_axi_arvalid),
-		.axi_arready(table_axi_arready),
-		.axi_awaddr(table_axi_awaddr),
-		.axi_awvalid(table_axi_awvalid),
-		.axi_awready(table_axi_awready),
-		.axi_rdata(table_axi_rdata),
-		.axi_rvalid(table_axi_rvalid),
-		.axi_rready(table_axi_rready),
-		.axi_wdata(table_axi_wdata),
-		.axi_wstrb(table_axi_wstrb),
-		.axi_wvalid(table_axi_wvalid),
-		.axi_wready(table_axi_wready),
-		.b_ready(table_b_ready),
-		.b_valid(table_b_valid),
-		.b_response(table_b_response)
-	);
-	
-	bram_axi #(.ADDR_WIDTH(CACHE_ADDR_SIZE),.DATA_WIDTH(AXI_DATA_WIDTH))  L1 (
-		.clk(ui_clk),
-		.rst(ui_rst),
-		.axi_araddr(L1_axi_araddr),
-		.axi_arvalid(L1_axi_arvalid),
-		.axi_arready(L1_axi_arready),
-		.axi_awaddr(L1_axi_awaddr),
-		.axi_awvalid(L1_axi_awvalid),
-		.axi_awready(L1_axi_awready),
-		.axi_rdata(L1_axi_rdata),
-		.axi_rvalid(L1_axi_rvalid),
-		.axi_rready(L1_axi_rready),
-		.axi_wdata(L1_axi_wdata),
-		.axi_wstrb(L1_axi_wstrb),
-		.axi_wvalid(L1_axi_wvalid),
-		.axi_wready(L1_axi_wready),
-		.b_ready(L1_b_ready),
-		.b_valid(L1_b_valid),
-		.b_response(L1_b_response)
-	);
+
+/*****************************************************************************/
+
 
 	gpio_axi   gpio (
 		.clk(ui_clk),
@@ -561,83 +453,6 @@ module top
 	    .b_response({uart_b_response,gpio_b_response,cachecontroller_b_response}));
 
  
- 
-
-
-	mig_7series_0 mig_inst(
-		.ddr2_dq(ddr2_dq),
-		.ddr2_dqs_n(ddr2_dqs_n),
-		.ddr2_dqs_p(ddr2_dqs_p),
-		.ddr2_addr(ddr2_addr),
-		.ddr2_ba(ddr2_ba),
-		.ddr2_ras_n(ddr2_ras_n),
-		.ddr2_cas_n(ddr2_cas_n),
-		.ddr2_we_n(ddr2_we_n),
-		.ddr2_ck_p(ddr2_ck_p),
-		.ddr2_ck_n(ddr2_ck_n),
-		.ddr2_cke(ddr2_cke),
-		.ddr2_cs_n(ddr2_cs_n),
-		.ddr2_dm(ddr2_dm),
-		.ddr2_odt(ddr2_odt),
-		.sys_clk_i(ddr_sys_clk),
-		.clk_ref_i(ddr_clk_ref_i),
-		.ui_clk(ui_clk),
-		.ui_clk_sync_rst(ui_rst),
-		.mmcm_locked(mmcm_locked),
-		.aresetn(1), // FIXME
-		.app_sr_req(0),
-		.app_ref_req(0),
-		.app_zq_req(0),
-		.app_sr_active(app_sr_active),
-		.app_ref_ack(app_ref_ack),
-		.app_zq_ack(app_zq_ack),
-		.s_axi_awid(4'b0),
-		.s_axi_awaddr(ddr_axi_awaddr), 
-		.s_axi_awlen(ddr_axi_awlen),
-		.s_axi_awsize(ddr_axi_awsize),
-		.s_axi_awburst(ddr_axi_awburst),
-		.s_axi_awlock(1'b0), // normal access
-		.s_axi_awcache(4'b0011),
-		.s_axi_awprot(3'b0),
-		.s_axi_awqos(4'b0), 
-		.s_axi_awvalid(ddr_axi_awvalid),
-		.s_axi_awready(ddr_axi_awready),
-		.s_axi_wdata(ddr_axi_wdata),
-		.s_axi_wstrb(ddr_axi_wstrb),
-		.s_axi_wlast(1'b1),
-		.s_axi_wvalid(ddr_axi_wvalid),
-		.s_axi_wready(ddr_axi_wready),
-		.s_axi_bready(ddr_axi_bready),
-		.s_axi_bid(ddr_axi_bid),
-		.s_axi_bresp(ddr_axi_bresp),
-		.s_axi_bvalid(ddr_axi_bvalid),
-		.s_axi_arid(4'b0),
-		.s_axi_araddr(ddr_axi_araddr),
-		.s_axi_arlen(ddr_axi_arlen),
-		.s_axi_arsize(ddr_axi_arsize),
-		.s_axi_arburst(ddr_axi_arburst),
-		.s_axi_arlock(1'b0),
-		.s_axi_arcache(4'b0011),
-		.s_axi_arprot(3'b0),
-		.s_axi_arqos(4'b0),
-		.s_axi_arvalid(ddr_axi_arvalid),
-		.s_axi_arready(ddr_axi_arready),
-		.s_axi_rready(ddr_axi_rready),
-		.s_axi_rid(ddr_axi_rid),
-		.s_axi_rdata(ddr_axi_rdata),
-		.s_axi_rresp(ddr_axi_rresp),
-		.s_axi_rlast(ddr_axi_rlast),
-		.s_axi_rvalid(ddr_axi_rvalid),
-		//.sys_rst(~sw[0]),
-		.sys_rst(sw[0]),
-		.init_calib_complete(mig_calib_done)
-	);
-
-/**********************************/
-  assign ddr_r_ready = ddr_axi_arready;
-  assign ddr_w_ready = ddr_axi_awready;
-/**********************************/
-	
 
 	uart_axi #(.CLKS_PER_BIT(16'd83))
     uart (
