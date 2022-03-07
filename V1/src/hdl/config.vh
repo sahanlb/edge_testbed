@@ -20,4 +20,4 @@ parameter CACHE_ADDR_SIZE = 32'd10;
 parameter MEM_ADDR_SIZE = 32'd28;
 parameter AXI_DATA_WIDTH = 32'd32;
 
-parameter ENDPOINTS = 5;
+parameter ENDPOINTS = 3;

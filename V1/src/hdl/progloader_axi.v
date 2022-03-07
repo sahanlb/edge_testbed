@@ -1,6 +1,9 @@
 `timescale 1ps/1ps
 //`define SIMULATION
-module progloader_axi(
+module progloader_axi #(
+ parameter CLKS_PER_BIT = 16'd83
+)
+(
 clk,rst,urx,reprogram,w_processing,busy,
 
 axi_awaddr,axi_awvalid,axi_awready,
@@ -40,16 +43,16 @@ input							b_valid;
 input 		[1:0]					b_response;
 
 
-
-assign axi_wstrb = {(DATA_WIDTH>>3){1'b1}};
-assign busy = (state > 0) ? 1'b1 : 1'b0;
-
-
 reg [7:0] state;
 wire rx_dv;
 wire [7:0] rx_byte;
 reg [7:0] rx_byte_buff;
 reg [DATA_WIDTH-1:0] mem_data;
+
+
+assign axi_wstrb = {(DATA_WIDTH>>3){1'b1}};
+assign busy = (state > 0) ? 1'b1 : 1'b0;
+
 
 
 always @(posedge clk) begin
@@ -218,7 +221,7 @@ end
      
         
 `else
-        uart_rx_bram  #(.CLKS_PER_BIT(8'd83)) rx(. i_Clock(clk),.i_Rx_Serial(urx),.o_Rx_DV(rx_dv),.o_Rx_Byte(rx_byte));
+        uart_rx_bram  #(.CLKS_PER_BIT(CLKS_PER_BIT)) rx(. i_Clock(clk),.i_Rx_Serial(urx),.o_Rx_DV(rx_dv),.o_Rx_Byte(rx_byte));
 
 `endif			
 		

@@ -1,4 +1,7 @@
-module uart_axi(
+module uart_axi #(
+  parameter CLKS_PER_BIT = 16'd83
+)
+(
 input clk,
 input rst,
 
@@ -35,7 +38,7 @@ output utx);
   assign axi_rvalid = fifo_data_out_valid & axi_rready;
   fifo rx_fifo (.clk(clk), .rst(rst), .data_in(rx_byte), .data_in_valid(rx_dv), .data_out(axi_rdata[7:0]), .data_out_ready(axi_rready), .data_out_valid(fifo_data_out_valid));
 	
-  uart_rx  #(.CLKS_PER_BIT(8'd83)) rx(
+  uart_rx  #(.CLKS_PER_BIT(CLKS_PER_BIT)) rx(
    . i_Clock(clk),
    .i_Rx_Serial(urx),
    .o_Rx_DV(rx_dv),
@@ -46,12 +49,12 @@ output utx);
    wire tx_active;
    wire tx_done;
    
-   assign axi_awready = (tx_active) ? 1'b0 : 1'b1;;
+   assign axi_awready = (tx_active) ? 1'b0 : 1'b1;
    assign axi_wready = (tx_active) ? 1'b0 : 1'b1;
    assign b_response = 2'b00;
 
    
-   uart_tx  #(.CLKS_PER_BIT(16'd83)) tx(
+   uart_tx  #(.CLKS_PER_BIT(CLKS_PER_BIT)) tx(
    .i_Clock(clk),
    .i_Tx_DV(axi_wready && axi_wvalid),
    .i_Tx_Byte(axi_wdata[7:0]), 
