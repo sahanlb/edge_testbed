@@ -12,6 +12,7 @@ module top
 	output uart_tx,  
 	output [7:0] led,
   output mig_calib_done,
+  output ddr_r_ready, ddr_w_ready,
 	output [0:0] ddr2_cke, output [0:0] ddr2_ck_p, output [0:0]  ddr2_ck_n,
 	output [0:0] ddr2_cs_n, output ddr2_ras_n, output ddr2_cas_n, output ddr2_we_n,
 	output [2:0] ddr2_ba, output [12:0] ddr2_addr, output [0:0] ddr2_odt, output [1:0] ddr2_dm,
@@ -489,7 +490,8 @@ module top
 		.ENABLE_COUNTERS(0),
 		.TWO_STAGE_SHIFT(0),
 		.ENABLE_REGS_16_31(1),
-		.STACKADDR(GPIO_START_ADDRESS)
+		//.STACKADDR(GPIO_START_ADDRESS)
+		.STACKADDR(MEM_END_ADDRESS)
 	) 
 	cpu (
 		.clk(ui_clk),
@@ -630,6 +632,11 @@ module top
 		.sys_rst(sw[0]),
 		.init_calib_complete(mig_calib_done)
 	);
+
+/**********************************/
+  assign ddr_r_ready = ddr_axi_arready;
+  assign ddr_w_ready = ddr_axi_awready;
+/**********************************/
 	
 
 	uart_axi #(.CLKS_PER_BIT(16'd83))
