@@ -11,7 +11,7 @@ module top
 	input uart_rx,
 	output uart_tx,  
 
-  input sw,
+  input [15:0] sw,
 	output [7:0] led,
   output dv
 ); 
@@ -61,7 +61,8 @@ module top
 	
 /////////////////////////////////////////////////SIGNALS/////////////////////////////////////////////////////////
 	
-
+parameter CLKS_PER_BIT = 16'd100; // 1,000,000
+//parameter CLKS_PER_BIT = 16'd10416; // 9,600
 
 	// GPIO Controller
 	wire	[31:0]			gpio_axi_araddr;
@@ -102,12 +103,17 @@ module top
 	
 	
 	wire				ui_clk = clk_i;
-  wire				ui_rst = sw;
+  wire				ui_rst = sw[15];
+
+  reg tx_valid;
+  reg [1:0] tx_state;
+
+  wire tx_active, tx_done;
 
 /////////////////////////////////////////////////INSTANTIATIONS/////////////////////////////////////////////////////////
 
 `ifdef SIMULATION
-    	 uart_tx  #(.CLKS_PER_BIT(16'd10416)) sim_tx(
+    	 uart_tx  #(.CLKS_PER_BIT(CLKS_PER_BIT)) sim_tx(
 		.i_Clock(ui_clk),
 		.i_Tx_DV(sim_utx_dv),
 		.i_Tx_Byte(sim_utx_data), 
@@ -119,52 +125,63 @@ module top
 
 
 
-  uart_rx  #(.CLKS_PER_BIT(16'd10416)) rx(
+  uart_rx  #(.CLKS_PER_BIT(CLKS_PER_BIT)) rx(
    . i_Clock(ui_clk),
    .i_Rx_Serial(uart_rx),
    .o_Rx_DV(dv),
    .o_Rx_Byte(led)
    );
+
+
+   uart_tx  #(.CLKS_PER_BIT(CLKS_PER_BIT)) tx(
+   .i_Clock(ui_clk),
+   .i_Tx_DV(tx_valid),
+   .i_Tx_Byte(sw[7:0]), 
+   .o_Tx_Active(tx_active),
+   .o_Tx_Serial(uart_tx),
+   . o_Tx_Done(tx_done)
+   );
 	
 
-	//uart_axi #(.CLKS_PER_BIT(16'd10416))
-  //  uart (
-	//	.clk(ui_clk),
-	//	.rst(ui_rst),
-	//	.axi_araddr(uart_axi_araddr),
-	//	.axi_arvalid(uart_axi_arvalid),
-	//	.axi_arready(uart_axi_arready),
-	//	.axi_awaddr(uart_axi_awaddr),
-	//	.axi_awvalid(uart_axi_awvalid),
-	//	.axi_awready(uart_axi_awready),
-	//	.axi_rdata(uart_axi_rdata),
-	//	.axi_rvalid(uart_axi_rvalid),
-	//	.axi_rready(uart_axi_rready),
-	//	.axi_wdata(uart_axi_wdata),
-	//	.axi_wvalid(uart_axi_wvalid),
-	//	.axi_wready(uart_axi_wready),
-	//	.b_ready(uart_b_ready),
-	//	.b_valid(uart_b_valid),
-	//	.b_response(uart_b_response),
-	//	.utx(uart_tx),
-	//	.urx(uart_rx)
-	//);
+localparam IDLE = 2'd0;
+localparam SEND = 2'd1;
+localparam WAIT = 2'd2;
 
+// State machine to set valid signal
+always @(posedge ui_clk)begin
+  if(ui_rst)begin
+    tx_valid <= 1'b0;
+    tx_state <= IDLE;
+  end
+  else begin
+    case(tx_state)
+      IDLE:begin
+        if(sw[14])begin
+          tx_valid <= 1'b1;
+          tx_state <= SEND;
+        end
+      end
+      SEND:begin
+        tx_valid <= 1'b0;
+        if(tx_done)begin
+          tx_state <= WAIT;
+        end
+        else begin
+          tx_state <= SEND;
+        end
+      end
+      WAIT:begin
+        if(sw[14])begin
+          tx_state <= WAIT;
+        end
+        else begin
+          tx_state <= IDLE;
+        end
+      end
+    endcase
+  end
+end
 
-//////////////////// Continuous assignments ////////////////////////////
-//assign uart_axi_araddr = 0;
-//assign uart_axi_arvalid = 0;
-//assign uart_axi_awaddr = 0;
-//assign uart_axi_awvalid = 0;
-//assign uart_axi_rready = 1'b1;
-//assign uart_b_ready = 1'b1;
-//
-//assign gpio_axi_wvalid = uart_axi_rvalid;
-//assign gpio_axi_wdata = uart_axi_rdata;
-//assign gpio_axi_awaddr = 0;
-//assign gpio_axi_awvalid = 1'b1;
-//assign gpio_axi_araddr = 0;
-//assign gpio_axi_arvalid = 0;
 
 endmodule
 
