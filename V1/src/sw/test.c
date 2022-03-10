@@ -1,4 +1,5 @@
 #define 	GPIO 		0x10000000	
+#define 	UART		0x10000018 
 #define memorder 0
 
 void write_led(int val){
@@ -6,9 +7,15 @@ void write_led(int val){
 	//*((int*)GPIO) = val;
 }				  
 
+void write_uart(int val){
+	__atomic_store_n((int*)UART, val, memorder);
+	//*((int*)UART) = val;
+}				  
+
 
 void main(void){
 int i = 0;
+int j = 0;
 
 
 while (1){
@@ -75,6 +82,9 @@ while (1){
   for(i=0; i<100000; i=i+1){
   }
   write_led(15);
+
+  write_uart(j);
+  j = j+1;
 }
 return;
 }

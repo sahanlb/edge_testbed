@@ -315,16 +315,15 @@ assign ui_rst = sw[0];
 		.busy(progloader_busy)
 	);
 
-/*****************************************************************************/
-// Replace caches and DRAM with a single BRAM
-/* Total size = 2^13 x 2^2 = 2^15 = 32K */
-	bram_axi #(.ADDR_WIDTH(13),.DATA_WIDTH(AXI_DATA_WIDTH))  mem (
+
+/* Cache controller */
+	cachecontroller_axi #(.CACHE_ADDR_SIZE(CACHE_ADDR_SIZE),.MEM_ADDR_SIZE(MEM_ADDR_SIZE))  cachecontroller (
 		.clk(ui_clk),
 		.rst(ui_rst),
-		.axi_araddr(cachecontroller_axi_araddr>>2),
+		.axi_araddr(cachecontroller_axi_araddr),
 		.axi_arvalid(cachecontroller_axi_arvalid),
 		.axi_arready(cachecontroller_axi_arready),
-		.axi_awaddr((reprogram) ? (progloader_axi_awaddr>>2) : (cachecontroller_axi_awaddr>>2)),
+		.axi_awaddr((reprogram) ? progloader_axi_awaddr : cachecontroller_axi_awaddr),
 		.axi_awvalid((reprogram) ? progloader_axi_awvalid : cachecontroller_axi_awvalid),
 		.axi_awready(cachecontroller_axi_awready),
 		.axi_rdata(cachecontroller_axi_rdata),
@@ -336,7 +335,124 @@ assign ui_rst = sw[0];
 		.axi_wready(cachecontroller_axi_wready),
 		.b_ready((reprogram) ? progloader_b_ready : cachecontroller_b_ready),
 		.b_valid(cachecontroller_b_valid),
-		.b_response(cachecontroller_b_response)
+		.b_response(cachecontroller_b_response),
+		.ddr_axi_araddr(ddr_axi_araddr),
+		.ddr_axi_arvalid(ddr_axi_arvalid),
+		.ddr_axi_arready(ddr_axi_arready),
+		.ddr_axi_awaddr(ddr_axi_awaddr),
+		.ddr_axi_awvalid(ddr_axi_awvalid),
+		.ddr_axi_awready(ddr_axi_awready),
+		.ddr_axi_rdata(ddr_axi_rdata),
+		.ddr_axi_rvalid(ddr_axi_rvalid),
+		.ddr_axi_rready(ddr_axi_rready),
+		.ddr_axi_wdata(ddr_axi_wdata),
+		.ddr_axi_wstrb(ddr_axi_wstrb),
+		.ddr_axi_wvalid(ddr_axi_wvalid),
+		.ddr_axi_wready(ddr_axi_wready),
+		.ddr_b_ready(ddr_axi_bready),
+		.ddr_b_valid(ddr_axi_bvalid),
+		.ddr_b_response(ddr_axi_bresp),
+		.L1_axi_araddr(L1_axi_araddr),
+		.L1_axi_arvalid(L1_axi_arvalid),
+		.L1_axi_arready(L1_axi_arready),
+		.L1_axi_awaddr(L1_axi_awaddr),
+		.L1_axi_awvalid(L1_axi_awvalid),
+		.L1_axi_awready(L1_axi_awready),
+		.L1_axi_rdata(L1_axi_rdata),
+		.L1_axi_rvalid(L1_axi_rvalid),
+		.L1_axi_rready(L1_axi_rready),
+		.L1_axi_wdata(L1_axi_wdata),
+		.L1_axi_wstrb(L1_axi_wstrb),
+		.L1_axi_wvalid(L1_axi_wvalid),
+		.L1_axi_wready(L1_axi_wready),
+		.L1_b_ready(L1_b_ready),
+		.L1_b_valid(L1_b_valid),
+		.L1_b_response(L1_b_response),		
+		.table_axi_araddr(table_axi_araddr),
+		.table_axi_arvalid(table_axi_arvalid),
+		.table_axi_arready(table_axi_arready),
+		.table_axi_awaddr(table_axi_awaddr),
+		.table_axi_awvalid(table_axi_awvalid),
+		.table_axi_awready(table_axi_awready),
+		.table_axi_rdata(table_axi_rdata),
+		.table_axi_rvalid(table_axi_rvalid),
+		.table_axi_rready(table_axi_rready),
+		.table_axi_wdata(table_axi_wdata),
+		.table_axi_wstrb(table_axi_wstrb),
+		.table_axi_wvalid(table_axi_wvalid),
+		.table_axi_wready(table_axi_wready),
+		.table_b_ready(table_b_ready),
+		.table_b_valid(table_b_valid),
+		.table_b_response(table_b_response),
+		.w_processing(cachecontroller_w_processing)
+	);
+
+
+	bram_axi #(.ADDR_WIDTH(CACHE_ADDR_SIZE),.DATA_WIDTH(MEM_ADDR_SIZE-CACHE_ADDR_SIZE-2))  cache_table (
+		.clk(ui_clk),
+		.rst(ui_rst),
+		.axi_araddr(table_axi_araddr),
+		.axi_arvalid(table_axi_arvalid),
+		.axi_arready(table_axi_arready),
+		.axi_awaddr(table_axi_awaddr),
+		.axi_awvalid(table_axi_awvalid),
+		.axi_awready(table_axi_awready),
+		.axi_rdata(table_axi_rdata),
+		.axi_rvalid(table_axi_rvalid),
+		.axi_rready(table_axi_rready),
+		.axi_wdata(table_axi_wdata),
+		.axi_wstrb(table_axi_wstrb),
+		.axi_wvalid(table_axi_wvalid),
+		.axi_wready(table_axi_wready),
+		.b_ready(table_b_ready),
+		.b_valid(table_b_valid),
+		.b_response(table_b_response)
+	);
+	
+	bram_axi #(.ADDR_WIDTH(CACHE_ADDR_SIZE),.DATA_WIDTH(AXI_DATA_WIDTH))  L1 (
+		.clk(ui_clk),
+		.rst(ui_rst),
+		.axi_araddr(L1_axi_araddr),
+		.axi_arvalid(L1_axi_arvalid),
+		.axi_arready(L1_axi_arready),
+		.axi_awaddr(L1_axi_awaddr),
+		.axi_awvalid(L1_axi_awvalid),
+		.axi_awready(L1_axi_awready),
+		.axi_rdata(L1_axi_rdata),
+		.axi_rvalid(L1_axi_rvalid),
+		.axi_rready(L1_axi_rready),
+		.axi_wdata(L1_axi_wdata),
+		.axi_wstrb(L1_axi_wstrb),
+		.axi_wvalid(L1_axi_wvalid),
+		.axi_wready(L1_axi_wready),
+		.b_ready(L1_b_ready),
+		.b_valid(L1_b_valid),
+		.b_response(L1_b_response)
+	);
+
+
+/*****************************************************************************/
+// Replace caches and DRAM with a single BRAM
+/* Total size = 2^13 x 2^2 = 2^15 = 32K */
+	bram_axi #(.ADDR_WIDTH(13),.DATA_WIDTH(AXI_DATA_WIDTH), .INIT(0))  mem (
+		.clk(ui_clk),
+		.rst(ui_rst),
+		.axi_araddr(ddr_axi_araddr>>2),
+		.axi_arvalid(ddr_axi_arvalid),
+		.axi_arready(ddr_axi_arready),
+		.axi_awaddr(ddr_axi_awaddr>>2),
+		.axi_awvalid(ddr_axi_awvalid),
+		.axi_awready(ddr_axi_awready),
+		.axi_rdata(ddr_axi_rdata),
+		.axi_rvalid(ddr_axi_rvalid),
+		.axi_rready(ddr_axi_rready),
+		.axi_wdata(ddr_axi_wdata),
+		.axi_wstrb(ddr_axi_wstrb),
+		.axi_wvalid(ddr_axi_wvalid),
+		.axi_wready(ddr_axi_wready),
+		.b_ready(ddr_axi_bready),
+		.b_valid(ddr_axi_bvalid),
+		.b_response(ddr_axi_bresp)
 	);
 
 /*****************************************************************************/

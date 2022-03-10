@@ -12,6 +12,7 @@ b_ready,b_valid,b_response
 
 parameter ADDR_WIDTH = 10;
 parameter DATA_WIDTH = 32;
+parameter INIT = 0;
 
 input clk;
 input rst;
@@ -53,7 +54,11 @@ reg [DATA_WIDTH-1:0] mem [0: (2**ADDR_WIDTH)-1];
 //	end
 //end
 //
-initial $readmemh("/home/sahanb/1-Projects/1-DISL/4-edge_testbed/5-edge_testbed_fork/edge_testbed/V1/src/sw/firmware.hex", mem);
+initial begin
+  if(INIT) begin
+    $readmemh("/home/sahanb/1-Projects/1-DISL/4-edge_testbed/5-edge_testbed_fork/edge_testbed/V1/src/sw/firmware.hex", mem);
+  end
+end
 
 /////////////////////////////////////////////////////////   READ ///////////////////////////////////////
 

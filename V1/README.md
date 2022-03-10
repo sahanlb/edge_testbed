@@ -1,4 +1,5 @@
-- This branch contains a simplified design with the whole memory hierarchy being replaced by a single BRAM.
+- This branch contains a simplified design with the DRAM controller replaced by a BRAM.
+- L1 cache is kept intact.
 
 
 

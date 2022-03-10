@@ -16,6 +16,7 @@ all:	$(OUTPUT_NAME).hex
 
 
 $(OUTPUT_NAME).o: $(SOURCE)
+	#$(CROSS)gcc $(CROSSCFLAGS) -c -o $@  $<
 	$(CROSS)gcc $(CROSSCFLAGS) -O0 -c -o $@  $<
 	
 $(OUTPUT_NAME).elf: $(OUTPUT_NAME).o
@@ -23,9 +24,13 @@ $(OUTPUT_NAME).elf: $(OUTPUT_NAME).o
 	
     
 $(OUTPUT_NAME).hex: $(OUTPUT_NAME).elf
-	#$(CROSS)objcopy -O verilog $< /dev/stdout > $@
-	$(CROSS)objcopy -O verilog --verilog-data-width=4 $< /dev/stdout > $@
+	$(CROSS)objcopy -O verilog $< /dev/stdout > $@
+	#$(CROSS)objcopy -O verilog --verilog-data-width=4 $< /dev/stdout > $@
 	#$(CROSS)objcopy -O verilog --gap-fill 00000000 --verilog-data-width=4 --reverse-bytes=4 $< /dev/stdout > $@
+
+wordaddr: $(OUTPUT_NAME).elf
+	$(CROSS)objcopy -O verilog --verilog-data-width=4 $(OUTPUT_NAME).elf /dev/stdout > $(OUTPUT_NAME)_wordaddr.hex
+
 
 
 .PHONY: dump
