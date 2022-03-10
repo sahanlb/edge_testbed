@@ -9,7 +9,8 @@ means.
 
 MEMORY {
 	/* the memory in the testbench is 256M in size; */
-	mem (rwx) : ORIGIN = 0x00000000, LENGTH = 0x8000000
+	/*mem (rwx) : ORIGIN = 0x00000000, LENGTH = 0x8000000*/
+	mem (rwx) : ORIGIN = 0x00000000, LENGTH = 0x8000 /*32K memory*/
 }
 
 SECTIONS {

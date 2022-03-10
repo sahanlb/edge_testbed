@@ -1,9 +1,6 @@
 `timescale 1ps/1ps
 //`define SIMULATION
-module progloader_axi #(
- parameter CLKS_PER_BIT = 16'd83
-)
-(
+module progloader_axi (
 clk,rst,urx,reprogram,w_processing,busy,
 
 axi_awaddr,axi_awvalid,axi_awready,
@@ -12,6 +9,7 @@ b_ready,b_valid,b_response
 );
 
 
+parameter CLKS_PER_BIT = 16'd83;
 parameter MEM_ADDR_SIZE = 32;
 parameter DATA_WIDTH = 32;
 

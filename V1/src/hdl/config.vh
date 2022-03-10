@@ -1,6 +1,7 @@
 parameter MEM_START_ADDRESS = 	32'h00000000;
 //parameter MEM_END_ADDRESS	= 	32'h0FFFFFFF;
-parameter MEM_END_ADDRESS	= 	32'h07FFFFFF; // Nexys A7 128MB DRAM
+//parameter MEM_END_ADDRESS	= 	32'h07FFFFFF; // Nexys A7 128MB DRAM
+parameter MEM_END_ADDRESS	= 	32'h7FFF; // 32K memory
 
 parameter GPIO_START_ADDRESS = 	32'h10000000;
 parameter GPIO_END_ADDRESS = 		32'h10000000;

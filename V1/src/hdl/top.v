@@ -10,11 +10,11 @@ module top
 	input [3:0] sw,
 	input uart_rx,
 	output uart_tx,  
-	output [7:0] led,
-	output [0:0] ddr2_cke, output [0:0] ddr2_ck_p, output [0:0]  ddr2_ck_n,
-	output [0:0] ddr2_cs_n, output ddr2_ras_n, output ddr2_cas_n, output ddr2_we_n,
-	output [2:0] ddr2_ba, output [12:0] ddr2_addr, output [0:0] ddr2_odt, output [1:0] ddr2_dm,
-	inout [1:0] ddr2_dqs_p, inout [1:0] ddr2_dqs_n, inout [15:0] ddr2_dq
+	output [7:0] led
+	//output [0:0] ddr2_cke, output [0:0] ddr2_ck_p, output [0:0]  ddr2_ck_n,
+	//output [0:0] ddr2_cs_n, output ddr2_ras_n, output ddr2_cas_n, output ddr2_we_n,
+	//output [2:0] ddr2_ba, output [12:0] ddr2_addr, output [0:0] ddr2_odt, output [1:0] ddr2_dm,
+	//inout [1:0] ddr2_dqs_p, inout [1:0] ddr2_dqs_n, inout [15:0] ddr2_dq
 ); 
 
 	wire i2c_sda; wire i2c_scl;
@@ -45,16 +45,16 @@ module top
 		sim_utx_data = 8'd0;
 		#20000;
 		sw[0] = 1'b0;
-		#130_000_000;
-		sw[1] = 1'b1;
-		#200_000_000;
-		sw[1] = 1'b0;
-		#20_000_000;
-		sim_utx_data = 8'd6;
-		sim_utx_dv = 1'b1;
-		#40_000;
-		sim_utx_dv = 1'b0;
-		#12_000_000;    
+		// #130_000_000;
+		// sw[1] = 1'b1;
+		// #200_000_000;
+		// sw[1] = 1'b0;
+		// #20_000_000;
+		// sim_utx_data = 8'd6;
+		// sim_utx_dv = 1'b1;
+		// #40_000;
+		// sim_utx_dv = 1'b0;
+		// #12_000_000;    
 	end
 	
 	reg [8:0] spi_mosi_reg;
@@ -277,12 +277,14 @@ module top
         wire 				ddr_sys_clk;
         wire 				ddr_clk_ref_i;
 
+assign ui_clk = clk_i;
+assign ui_rst = sw[0];
 	
 
 /////////////////////////////////////////////////INSTANTIATIONS/////////////////////////////////////////////////////////
 
 `ifdef SIMULATION
-    	 uart_tx  #(.CLKS_PER_BIT(16'd83)) sim_tx(
+    	 uart_tx  #(.CLKS_PER_BIT(16'd100)) sim_tx(
 		.i_Clock(ui_clk),
 		.i_Tx_DV(sim_utx_dv),
 		.i_Tx_Byte(sim_utx_data), 
@@ -292,16 +294,8 @@ module top
 	);
 `endif
 
-	clk_wiz_0 pll(
-		.clk_out1(ddr_sys_clk),
-		.clk_out2(),
-		.clk_out3(ddr_clk_ref_i),
-		.clk_in1(clk_i)
-	);
-         	
-
 	progloader_axi #(
-    .CLKS_PER_BIT(16'd83)
+    .CLKS_PER_BIT(16'd100)
   ) loader (
 		.clk(ui_clk),
 		.rst(ui_rst),
@@ -323,13 +317,14 @@ module top
 
 /*****************************************************************************/
 // Replace caches and DRAM with a single BRAM
-	bram_axi #(.ADDR_WIDTH(25),.DATA_WIDTH(AXI_DATA_WIDTH))  mem (
+/* Total size = 2^13 x 2^2 = 2^15 = 32K */
+	bram_axi #(.ADDR_WIDTH(13),.DATA_WIDTH(AXI_DATA_WIDTH))  mem (
 		.clk(ui_clk),
 		.rst(ui_rst),
-		.axi_araddr(cachecontroller_axi_araddr),
+		.axi_araddr(cachecontroller_axi_araddr>>2),
 		.axi_arvalid(cachecontroller_axi_arvalid),
 		.axi_arready(cachecontroller_axi_arready),
-		.axi_awaddr((reprogram) ? progloader_axi_awaddr : cachecontroller_axi_awaddr),
+		.axi_awaddr((reprogram) ? (progloader_axi_awaddr>>2) : (cachecontroller_axi_awaddr>>2)),
 		.axi_awvalid((reprogram) ? progloader_axi_awvalid : cachecontroller_axi_awvalid),
 		.axi_awready(cachecontroller_axi_awready),
 		.axi_rdata(cachecontroller_axi_rdata),
@@ -383,7 +378,7 @@ module top
 		.TWO_STAGE_SHIFT(0),
 		.ENABLE_REGS_16_31(1),
 		//.STACKADDR(GPIO_START_ADDRESS)
-		.STACKADDR(MEM_END_ADDRESS)
+		.STACKADDR(MEM_END_ADDRESS+1)
 	) 
 	cpu (
 		.clk(ui_clk),
@@ -454,7 +449,7 @@ module top
 
  
 
-	uart_axi #(.CLKS_PER_BIT(16'd83))
+	uart_axi #(.CLKS_PER_BIT(16'd100))
     uart (
 		.clk(ui_clk),
 		.rst(ui_rst  | reprogram),

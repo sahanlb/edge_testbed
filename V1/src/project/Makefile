@@ -19,7 +19,8 @@ update_cl:
 	
 .PHONY: compile
 compile: 
-	vivado -nojournal -nolog -mode batch -source tcl/compile.tcl
+	rm -rf compile.log
+	vivado -nojournal -nolog -mode batch -source tcl/compile.tcl |tee compile.log
 	
 	
 .PHONY: prog

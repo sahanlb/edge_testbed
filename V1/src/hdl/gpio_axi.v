@@ -1,5 +1,4 @@
 `timescale 1ps/1ps
-//`define SIMULATION
 
 module gpio_axi(
 input clk,

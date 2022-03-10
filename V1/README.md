@@ -1,3 +1,7 @@
+- This branch contains a simplified design with the whole memory hierarchy being replaced by a single BRAM.
+
+
+
 # Edge Testbed
 
 Tested on the Arty A735T board

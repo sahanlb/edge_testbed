@@ -1,7 +1,4 @@
-module uart_axi #(
-  parameter CLKS_PER_BIT = 16'd83
-)
-(
+module uart_axi (
 input clk,
 input rst,
 
@@ -28,6 +25,7 @@ output 	[1:0]			b_response,
 input urx,
 output utx);
 
+  parameter CLKS_PER_BIT = 16'd83;
   
   wire rx_dv;
   wire fifo_data_out_valid;
@@ -120,7 +118,7 @@ module uart_tx (
   parameter s_CLEANUP      = 3'b100;
    
   reg [2:0]    r_SM_Main     = 0;
-  reg [15:0]    r_Clock_Count = 0;
+  reg [15:0]   r_Clock_Count = 0;
   reg [2:0]    r_Bit_Index   = 0;
   reg [7:0]    r_Tx_Data     = 0;
   reg          r_Tx_Done     = 0;
@@ -257,7 +255,7 @@ module uart_rx
    output       o_Rx_DV,
    output [7:0] o_Rx_Byte
    );
-  parameter CLKS_PER_BIT   = 8'd83;
+  parameter CLKS_PER_BIT   = 16'd83;
   parameter s_IDLE         = 3'b000;
   parameter s_RX_START_BIT = 3'b001;
   parameter s_RX_DATA_BITS = 3'b010;
@@ -267,7 +265,7 @@ module uart_rx
   reg           r_Rx_Data_R = 1'b1;
   reg           r_Rx_Data   = 1'b1;
    
-  reg [7:0]     r_Clock_Count = 0;
+  reg [15:0]    r_Clock_Count = 0;
   reg [2:0]     r_Bit_Index   = 0; //8 bits total
   reg [7:0]     r_Rx_Byte     = 0;
   reg           r_Rx_DV       = 0;

@@ -46,12 +46,14 @@ assign b_response = 0;
 
 reg [DATA_WIDTH-1:0] mem [0: (2**ADDR_WIDTH)-1];
 
-integer i;
-initial begin
-	for (i = 0 ; i < (2**ADDR_WIDTH); i=i+1) begin
-	mem[i] = 0;		
-	end
-end
+//integer i;
+//initial begin
+//	for (i = 0 ; i < (2**ADDR_WIDTH); i=i+1) begin
+//	mem[i] = 0;		
+//	end
+//end
+//
+initial $readmemh("/home/sahanb/1-Projects/1-DISL/4-edge_testbed/5-edge_testbed_fork/edge_testbed/V1/src/sw/firmware.hex", mem);
 
 /////////////////////////////////////////////////////////   READ ///////////////////////////////////////
 

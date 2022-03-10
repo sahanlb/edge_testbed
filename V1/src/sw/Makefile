@@ -6,7 +6,8 @@ LINKER = firmware.ld
 # CROSS = riscv64-linux-gnu-
 CROSS = riscv64-unknown-elf-
 CROSSCFLAGS = -O3 -Wno-int-conversion -march=$(CONFIG) -mabi=$(ABI) -ffreestanding -nostdlib
-CROSSLDFLAGS = -march=$(CONFIG) -mabi=$(ABI) -ffreestanding -nostdlib  -Wl,-M
+# CROSSLDFLAGS = -march=$(CONFIG) -mabi=$(ABI) -ffreestanding -nostdlib -mbig-endian -Wl,-M
+CROSSLDFLAGS = -march=$(CONFIG) -mabi=$(ABI) -ffreestanding -nostdlib -Wl,-M
 UART_PORT = ttyUSB1
 
 
@@ -15,14 +16,16 @@ all:	$(OUTPUT_NAME).hex
 
 
 $(OUTPUT_NAME).o: $(SOURCE)
-	$(CROSS)gcc $(CROSSCFLAGS) -c -o $@  $<
+	$(CROSS)gcc $(CROSSCFLAGS) -O0 -c -o $@  $<
 	
 $(OUTPUT_NAME).elf: $(OUTPUT_NAME).o
 	$(CROSS)gcc $(CROSSLDFLAGS) -T $(LINKER) -o $@   Reset_Handler.S $<
 	
     
 $(OUTPUT_NAME).hex: $(OUTPUT_NAME).elf
-	$(CROSS)objcopy -O verilog $< /dev/stdout > $@
+	#$(CROSS)objcopy -O verilog $< /dev/stdout > $@
+	$(CROSS)objcopy -O verilog --verilog-data-width=4 $< /dev/stdout > $@
+	#$(CROSS)objcopy -O verilog --gap-fill 00000000 --verilog-data-width=4 --reverse-bytes=4 $< /dev/stdout > $@
 
 
 .PHONY: dump
