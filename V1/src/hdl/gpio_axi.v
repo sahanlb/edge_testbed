@@ -26,7 +26,7 @@ output [1:0] 		b_response,
 
 ////  io
 input  [3:0] sw,
-output reg [7:0] led
+output reg [3:0] led
 );
 
 assign b_response = 0;
@@ -93,7 +93,7 @@ always @(posedge clk) begin
 	if (rst) 
 		b_valid <= 0;
 	else if (write_start[2] && !axi_awready && !axi_wready) begin
-		led <= axi_wdata_buff;
+		led <= axi_wdata_buff[3:0];
 		b_valid <= 1'b1;
 	end else if (write_start[2] && (axi_awready || axi_wready))
 		b_valid <= 1'b0;

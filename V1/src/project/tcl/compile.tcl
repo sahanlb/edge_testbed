@@ -2,7 +2,12 @@ open_project rv_img_proc_demo.xpr
 
 update_compile_order -fileset sources_1
 
+set_property top top [current_fileset]
+
+update_compile_order -fileset sources_1
+
 reset_run synth_1
+
 
 
 launch_runs synth_1 -jobs 2

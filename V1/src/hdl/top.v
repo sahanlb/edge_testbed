@@ -6,19 +6,30 @@ module top
 
 `ifndef SIMULATION 
 (
-	input clk_i,  
-	input [3:0] sw,
+	input sys_clk_p,  
+	input sys_clk_n,  
+  input rst_n,
+	input [3:0] btn_n,
 	input uart_rx,
 	output uart_tx,  
-	output [7:0] led
+	output [3:0] led
 	//output [0:0] ddr2_cke, output [0:0] ddr2_ck_p, output [0:0]  ddr2_ck_n,
 	//output [0:0] ddr2_cs_n, output ddr2_ras_n, output ddr2_cas_n, output ddr2_we_n,
 	//output [2:0] ddr2_ba, output [12:0] ddr2_addr, output [0:0] ddr2_odt, output [1:0] ddr2_dm,
 	//inout [1:0] ddr2_dqs_p, inout [1:0] ddr2_dqs_n, inout [15:0] ddr2_dq
 ); 
 
-	wire i2c_sda; wire i2c_scl;
-	wire spi_miso; wire spi_mosi; wire spi_clk; wire spi_cs;
+wire clk_i;
+wire [3:0] sw;
+
+assign sw = ~btn_n;
+
+IBUFDS sys_clk_ibufgds   //generate single end clock
+(
+ .O  (clk_i    ),
+ .I  (sys_clk_p),
+ .IB (sys_clk_n)
+);
 
 `else
 ;
@@ -30,14 +41,13 @@ module top
 	wire [0:0] ddr2_cs_n; wire ddr2_ras_n; wire ddr2_cas_n; wire ddr2_we_n;
 	wire [2:0] ddr2_ba; wire [13:0] ddr2_addr; wire [0:0] ddr2_odt; wire [1:0] ddr2_dm;
 	wire [1:0] ddr2_dqs_p; wire [1:0] ddr2_dqs_n; wire [15:0] ddr2_dq;
-	wire spi_miso; wire spi_mosi; wire spi_clk; wire spi_cs;
 	
 	reg [3:0] sw;
-	wire [7:0] led;
+	wire [3:0] led;
 	reg sim_utx_dv;
     	reg [7:0] sim_utx_data;
 	initial clk_i = 0;
-	always #5000 clk_i = ~clk_i;
+	always #2500 clk_i = ~clk_i;
 	initial begin
 		sw[0] = 1'b1;
 		sw[1] = 0;
@@ -56,12 +66,6 @@ module top
 		// sim_utx_dv = 1'b0;
 		// #12_000_000;    
 	end
-	
-	reg [8:0] spi_mosi_reg;
-	initial spi_mosi_reg = 9'b101010101;
-	always @(negedge spi_clk)
-	   spi_mosi_reg = {spi_mosi_reg[7:0], spi_mosi_reg[8]}; 
-	assign spi_miso = spi_mosi_reg[8];
 `endif
 
 	
@@ -70,6 +74,8 @@ module top
 	`include "config.vh"
 	
 /////////////////////////////////////////////////SIGNALS/////////////////////////////////////////////////////////
+
+parameter CLKS_PER_BIT = 16'd200;
 	
 	// RISCV Core  
 	wire	[31:0]			rv_axi_araddr;
@@ -278,13 +284,13 @@ module top
         wire 				ddr_clk_ref_i;
 
 assign ui_clk = clk_i;
-assign ui_rst = sw[0];
+assign ui_rst = ~rst_n;
 	
 
 /////////////////////////////////////////////////INSTANTIATIONS/////////////////////////////////////////////////////////
 
 `ifdef SIMULATION
-    	 uart_tx  #(.CLKS_PER_BIT(16'd100)) sim_tx(
+    	 uart_tx  #(.CLKS_PER_BIT(CLKS_PER_BIT)) sim_tx(
 		.i_Clock(ui_clk),
 		.i_Tx_DV(sim_utx_dv),
 		.i_Tx_Byte(sim_utx_data), 
@@ -295,7 +301,7 @@ assign ui_rst = sw[0];
 `endif
 
 	progloader_axi #(
-    .CLKS_PER_BIT(16'd100)
+    .CLKS_PER_BIT(CLKS_PER_BIT)
   ) loader (
 		.clk(ui_clk),
 		.rst(ui_rst),
@@ -565,7 +571,7 @@ assign ui_rst = sw[0];
 
  
 
-	uart_axi #(.CLKS_PER_BIT(16'd100))
+	uart_axi #(.CLKS_PER_BIT(CLKS_PER_BIT))
     uart (
 		.clk(ui_clk),
 		.rst(ui_rst  | reprogram),
